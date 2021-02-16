@@ -51,8 +51,8 @@
     const TabGroup = require("electron-tabs");
     let tabGroup = new TabGroup();
 
-    let tab2 = tabGroup.addTab({
-        title: "Home",
+    let home = tabGroup.addTab({
+        title: "设备列表",
         src: "home.html",
         visible: true,
         closable:false,
@@ -61,31 +61,49 @@
             disablewebsecurity:true
         }
     });
-    tab2.activate()
+    home.activate()
 
-
-    let tab3 = tabGroup.addTab({
-        title: "t",
-        src: "index.html",
-        visible: true,
-        webviewAttributes: {
-            nodeintegration: true,
-            disablewebsecurity:true
-        }
-    });
 
 
     // 注册webview中的console.log
-    const webview = document.querySelector('webview')
-    webview.addEventListener('console-message', (e) => {
-        console.log('Webview console:', e.message)
-    })
+    function consoleWebview(e) {
+        console.log('WConsole=>', e.message)
+    }
 
-    // 从webview中取回ipc信息，转发给ipcMain
-    webview.addEventListener('ipc-message', event => {
-        // prints "ping"
-        console.log("Got....", event)
-    })
+    function ipcHandler(event) {
+        console.log("IPC=>", event)
+        let channel = event.channel;
+        if (channel.includes("main")) {
+            // 发送给主进程的
+            return;
+        }
+        if (channel === "rend_page_device") {
+            device_name = event.args[0]
+            let tab_device = tabGroup.addTab({
+                title: device_name,
+                src: "device.html",
+                visible: true,
+                webviewAttributes: {
+                    nodeintegration: true,
+                    disablewebsecurity:true
+                }
+            });
+            localStorage.setItem("lastDevice", device_name)
+            tab_device.activate()
+            RenewWebviews();
+        }
+
+    }
+
+    function RenewWebviews() {
+        let webviews = document.querySelectorAll('webview')
+        console.log("now webviews:", webviews)
+        for (let i = 0; i < webviews.length; i++) {
+            webviews[i].addEventListener('console-message', consoleWebview)
+            webviews[i].addEventListener('ipc-message', ipcHandler)
+        }
+    }
+    RenewWebviews()
 
 </script>
 

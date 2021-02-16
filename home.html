@@ -19,8 +19,11 @@
 <div id="vDeciveTable" >
     <div> Refresh @ {{refresh_time}} </div>
     <ul >
-        <div v-for="d in devices" style="color:#09cd09;backgroundColor:rgb(39,7,83); text-align:right">
-            <span style="font-size: 28px"><strong>{{ d.split(" ")[0] }} </strong></span>
+        <div v-for="(d, i) in devices"
+             style="color:#09cd09;backgroundColor:rgb(39,7,83); text-align:right"
+             v-on:click="page_device($event, d)"
+        >
+            <span style="font-size: 28px"><strong>设备{{i+1}} : {{ d.split(" ")[0] }} </strong></span>
             <span style="font-size: 10px; color:white; text-align:right"> {{d}} </span>
             <hr>
         </div>
@@ -28,11 +31,18 @@
 </div>
 
 <script>
+    const ipcRenderer = require('electron').ipcRenderer;
     const vDeciveTable = new Vue({
         el: '#vDeciveTable',
         data: {
             refresh_time: null,
             devices: []
+        },
+        methods: {
+            page_device: function(ev, device){
+                device_name = device.split(" ")[0]
+                ipcRenderer.sendToHost('rend_page_device', device_name)
+            }
         }
     })
 </script>
@@ -48,13 +58,11 @@
     const {exec} = require('child_process');
     let devices = [];
     // 列出设备
-
     setInterval(
         () => {
             exec('adb devices -l', (err, stdout, stderr) => {
                 if (err) {
-                    console.log(err);
-                    console.log(`stderr: ${stderr}`);
+                    console.log(`[ERROR]: ${stderr}`);
                     return;
                 }
                 devices = [];
@@ -64,13 +72,13 @@
                         // console.log("=>", x);
                         x = x.trim();
                         devices.push(x);
-                        console.log("devices:", devices)
+                        // console.log("devices:", devices)
                     })
                 // console.log(`stdout: ${stdout}`);
                 vDeciveTable.devices = devices
                 vDeciveTable.refresh_time = moment().format('MMMM Do YYYY, h:mm:ss a')
             })
-        }, 1000)
+        }, 500)
 </script>
 </body>
 </html>
