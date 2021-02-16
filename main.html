@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <link rel="stylesheet" href="electron-tabs.css">
+    <style>
+        body { background:  #333; color: white; }
+        body {
+            padding: 0;
+            margin: 0;
+            overflow-x: hidden;
+            overflow-y: hidden;
+        }
+
+        #title-bar-btns {
+            -webkit-app-region: no-drag;
+            z-index:999;
+            position: fixed;
+            top: 2px;
+            right: 2px;
+        }
+    </style>
+</head>
+<body>
+
+
+
+<script>
+    const app = require('electron').remote.app;
+    document.getElementById("close-btn").addEventListener("click", function (e) {
+        app.quit();
+    });
+</script>
+
+<div class="etabs-tabgroup">
+    <div class="etabs-tabs"></div>
+    <div class="etabs-buttons"></div>
+</div>
+<div class="etabs-views"></div>
+
+
+<!--<div id="title-bar-btns">-->
+<!--无法生效，因为drag的原因-->
+<!--    <button id="close-btn">x</button>-->
+<!--</div>-->
+
+
+<script>
+
+    const TabGroup = require("electron-tabs");
+    let tabGroup = new TabGroup();
+
+    let tab2 = tabGroup.addTab({
+        title: "Home",
+        src: "home.html",
+        visible: true,
+        closable:false,
+        webviewAttributes: {
+            nodeintegration: true,
+            disablewebsecurity:true
+        }
+    });
+    tab2.activate()
+
+
+    let tab3 = tabGroup.addTab({
+        title: "t",
+        src: "index.html",
+        visible: true,
+        webviewAttributes: {
+            nodeintegration: true,
+            disablewebsecurity:true
+        }
+    });
+
+
+    // 注册webview中的console.log
+    const webview = document.querySelector('webview')
+    webview.addEventListener('console-message', (e) => {
+        console.log('Webview console:', e.message)
+    })
+
+    // 从webview中取回ipc信息，转发给ipcMain
+    webview.addEventListener('ipc-message', event => {
+        // prints "ping"
+        console.log("Got....", event)
+    })
+
+</script>
+
+</body>
+</html>

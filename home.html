@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <style>
+        body { background:  #333; color: white; }
+    </style>
+    <script src="lib/vue.js"></script>
+
+</head>
+<body style="color:White;">
+<h1>设备列表</h1>
+
+<script>
+    console.log("hre")
+    const ipcRenderer = require('electron').ipcRenderer;
+    console.log(ipcRenderer);
+    // ipcRenderer.sendToHost('e111', 'ping')
+</script>
+<script>
+    const {exec} = require('child_process');
+    let devices = [];
+    // 列出设备
+
+    setInterval(
+        () => {
+            exec('adb devices -l', (err, stdout, stderr) => {
+                if (err) {
+                    console.log(err);
+                    console.log(`stderr: ${stderr}`);
+                    return;
+                }
+                devices = [] ;
+                stdout.split("\n").forEach(
+                    (x) => {
+                        if (!x.includes("model")) return;
+                        // console.log("=>", x);
+                        devices.push(x);
+                        console.log("devices:", devices)
+                    })
+                // console.log(`stdout: ${stdout}`);
+            })
+        }, 1000)
+</script>
+<div>Home</div>
+</body>
+</html>
