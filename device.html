@@ -2,12 +2,70 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Title</title>
+    <script src="lib/moment.js"></script>
+    <script src="lib/vue.js"></script>
 </head>
 <body>
+
+
 <script>
     const thisDevice = localStorage.getItem("lastDevice")
-    document.write(thisDevice)
+    // document.write("设备：", thisDevice)
+    const fs = require("fs")
+    const path = require('path');
+    const cacheFolder = `tmp/${thisDevice}`
+    fs.mkdirSync(cacheFolder, {recursive: true})
+</script>
+<div style="alignment:left" id="snapshot">
+    <img v-if="src != null" style='margin-left: 0;max-height:600px;max-width:800px; object-fit: contain' id="realtime-snapshot" :src="src" alt=`snapshot-device` />
+</div>
+
+<script>
+    const {exec} = require('child_process');
+    const snapshot = new Vue({
+        el: '#snapshot',
+        data: {
+            src:null
+        }
+    })
+
+    let ebusy = false;
+
+    setInterval(
+        () => {
+            if (ebusy) return; // todo: recover
+            let now = moment().valueOf();
+            let ago = now - 5000;  // 删除5秒前的快照
+            let filename = `${cacheFolder}/snapshot-${now}.png`
+            let agoFile = `snapshot-${ago}.png`
+            fs.readdir(cacheFolder, (err, files) => {
+                files.forEach(file => {
+                    if (file.includes("snapshot") && file.localeCompare(agoFile) < 0) {
+                        try {
+                            fs.unlink(`${cacheFolder}/${file}`, (err) => {
+                                if (err) {
+                                    console.log("删除失败", err)
+                                    if (err.message.includes("busy")) {
+                                        ebusy = true;
+                                    }
+                                }
+                            })
+                        } catch (e) {
+                            console.log("error del:", e)
+                        }
+                    }
+                });
+            });
+            let cmd = `adb -s ${thisDevice} shell screencap -p | perl -pe \'s/\\x0D\\x0A/\\x0A/g\' > ${filename}`
+            console.log(cmd)
+            exec(cmd, (err, stdout, stderr) => {
+                if (err) {
+                    console.log(`[ERROR]: ${stderr}`);
+                    return;
+                }
+                snapshot.src = filename;
+            })
+        }, 1000)
 </script>
 </body>
 </html>
