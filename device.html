@@ -8,6 +8,7 @@
 <body>
 
 
+
 <script>
     const thisDevice = localStorage.getItem("lastDevice")
     // document.write("设备：", thisDevice)
@@ -19,6 +20,12 @@
 <div style="alignment:left" id="snapshot">
     <img v-if="src != null" style='margin-left: 0;max-height:600px;max-width:800px; object-fit: contain' id="realtime-snapshot" :src="src" alt=`snapshot-device` />
 </div>
+<script>
+    function setIntervalImmediately(func, interval) {
+        func();
+        return setInterval(func, interval);
+    }
+</script>
 
 <script>
     const {exec} = require('child_process');
@@ -31,7 +38,7 @@
 
     let ebusy = false;
 
-    setInterval(
+    setIntervalImmediately(
         () => {
             if (ebusy) return; // todo: recover
             let now = moment().valueOf();
@@ -46,6 +53,9 @@
                                 if (err) {
                                     console.log("删除失败", err)
                                     if (err.message.includes("busy")) {
+                                        new Notification('Ebusy', {
+                                            body: '设备繁忙. Device busy.'
+                                        })
                                         ebusy = true;
                                     }
                                 }

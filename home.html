@@ -55,10 +55,16 @@
 <!--    // ipcRenderer.sendToHost('e111', 'ping')-->
 <!--</script>-->
 <script>
+    function setIntervalImmediately(func, interval) {
+        func();
+        return setInterval(func, interval);
+    }
+</script>
+<script>
     const {exec} = require('child_process');
     let devices = [];
     // 列出设备
-    setInterval(
+    setIntervalImmediately(
         () => {
             exec('adb devices -l', (err, stdout, stderr) => {
                 if (err) {
