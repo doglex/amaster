@@ -4,20 +4,46 @@
     <meta charset="UTF-8">
     <title>Title</title>
     <style>
-        body { background:  #333; color: white; }
+        body {
+            background: #333;
+            color: white;
+        }
     </style>
     <script src="lib/vue.js"></script>
+    <script src="lib/moment.js"></script>
 
 </head>
 <body style="color:White;">
 <h1>设备列表</h1>
 
+<div id="vDeciveTable" >
+    <div> Refresh @ {{refresh_time}} </div>
+    <ul >
+        <div v-for="d in devices" style="color:#09cd09;backgroundColor:rgb(39,7,83); text-align:right">
+            <span style="font-size: 28px"><strong>{{ d.split(" ")[0] }} </strong></span>
+            <span style="font-size: 10px; color:white; text-align:right"> {{d}} </span>
+            <hr>
+        </div>
+    </ul>
+</div>
+
 <script>
-    console.log("hre")
-    const ipcRenderer = require('electron').ipcRenderer;
-    console.log(ipcRenderer);
-    // ipcRenderer.sendToHost('e111', 'ping')
+    const vDeciveTable = new Vue({
+        el: '#vDeciveTable',
+        data: {
+            refresh_time: null,
+            devices: []
+        }
+    })
 </script>
+
+
+<!--<script>-->
+<!--    console.log("hre")-->
+<!--    const ipcRenderer = require('electron').ipcRenderer;-->
+<!--    console.log(ipcRenderer);-->
+<!--    // ipcRenderer.sendToHost('e111', 'ping')-->
+<!--</script>-->
 <script>
     const {exec} = require('child_process');
     let devices = [];
@@ -31,18 +57,20 @@
                     console.log(`stderr: ${stderr}`);
                     return;
                 }
-                devices = [] ;
+                devices = [];
                 stdout.split("\n").forEach(
                     (x) => {
                         if (!x.includes("model")) return;
                         // console.log("=>", x);
+                        x = x.trim();
                         devices.push(x);
                         console.log("devices:", devices)
                     })
                 // console.log(`stdout: ${stdout}`);
+                vDeciveTable.devices = devices
+                vDeciveTable.refresh_time = moment().format('MMMM Do YYYY, h:mm:ss a')
             })
         }, 1000)
 </script>
-<div>Home</div>
 </body>
 </html>
