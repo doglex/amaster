@@ -3,7 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <title>Title</title>
+
     <script src="lib/vue.js"></script>
+
     <script>
         const infiniteScroll = require ('vue-infinite-scroll').infiniteScroll;
         Vue.use(infiniteScroll)
@@ -12,6 +14,7 @@
         body {
             background: #333;
             color: white;
+            font-size:16px;
         }
 
         .fileitem {
@@ -28,7 +31,26 @@
             background-color: darkslategrey;
         }
 
+        .btn {
+            /*background-color: DodgerBlue;*/
+            border: none;
+            color: white;
+            /*padding: 12px 30px;*/
+            cursor: pointer;
+            font-size: 14px;
+            z-index: 999;
+            float: right;
+        }
+
+        /* Darker background on mouse-over */
+        .btn:hover {
+            background-color: #3c0661;
+            z-index: 999;
+        }
+
     </style>
+    <link rel="stylesheet" href="lib/font-awesome-4.7.0/css/font-awesome.min.css">
+
 </head>
 <body >
 
@@ -42,7 +64,7 @@
     fs.mkdirSync(cacheFolder, {recursive: true})
 </script>
 
-
+<div id="statusbar" style="position:fixed;top:0"> </div>
 
 <div id="vFileTree" >
     <div style="font-size:20px;position:fixed;z-index:101;width:100%;margin-top:0">
@@ -57,11 +79,16 @@
         <div v-for="(file, i) in showFiles" v-on:dblclick="dblClickChangePath(file)"
              style="width:100%"
              v-bind:class='{folder: (file.type==="d" || file.type==="l") }'
+             @mouseover="hoverIndex = i"
+
              class="fileitem">
             {{(file.type==="d" || file.type==="l") ?file.name + "/" :file.name}}
+            <span v-if="hoverIndex===i" v-on:click="save(file)" class="btn"><i class="fa fa-download" aria-hidden="true" class="btn"
+            ></i>Save</span>
         </div>
     </div>
 </div>
+
 
 <script>
     const vFileTree = new Vue({
@@ -73,6 +100,7 @@
             currentPath: "/",
             device: thisDevice,
             useInfinite: false,
+            hoverIndex:null,
         },
         methods: {
             changePath: function() {
@@ -108,7 +136,28 @@
                         this.searchPath = this.currentPath + "/" + file.name
                     }
                     this.changePath()
+                } else {
+
                 }
+
+            },
+            save: function (file) {
+                var div = document.createElement("div");
+                div.style.width = "100px";
+                div.style.height = "100px";
+                div.style.background = "red";
+                div.style.color = "white";
+                div.innerHTML = "Hello";
+                document.getElementById("statusbar").appendChild(div);
+
+                console.log("saving")
+                let to_download;
+                if (this.currentPath.substr(this.currentPath.length-1) === "/") {
+                    to_download = this.currentPath + file.name
+                } else {
+                    to_download = this.currentPath + "/" + file.name
+                }
+                download_path(to_download)
             }
         }
     })
@@ -166,6 +215,22 @@
         })
     }
     refreshFileList("/")
+
+    function download_path(thisPath) {
+        cmd = `adb -s ${thisDevice}  pull ${thisPath} `
+        exec(cmd, (err, stdout, stderr) => {
+            if (err) {
+                console.log(`[ERROR]: ${stderr}`);
+                new Notification('Error', {
+                    body: `[ERROR]: ${stderr}`
+                })
+                return;
+            }
+            console.log(stdout)
+        })
+    }
+
+
 </script>
 
 </body>
