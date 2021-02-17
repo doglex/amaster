@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <script src="lib/vue.js"></script>
+    <style>
+        body {
+            background: #333;
+            color: white;
+        }
+    </style>
+</head>
+<body >
+<script>
+    const thisDevice = localStorage.getItem("lastDevice-explorer")
+    // document.write("设备管理器：", thisDevice)
+    const fs = require("fs")
+    const path = require('path');
+    const cacheFolder = `tmp/${thisDevice}-explorer`
+    fs.mkdirSync(cacheFolder, {recursive: true})
+</script>
+
+<div id="vFileTree" >
+    <span> {{device}} </span>
+    <input placeholder="/" type="text" @keyup.enter="changePath" v-model="searchPath">
+    <ul >
+        <div v-for="(file, i) in files">
+            {{(file.type==="d") ?file.name + "/" :file.name}}
+        </div>
+    </ul>
+</div>
+
+<script>
+    const vFileTree = new Vue({
+        el: '#vFileTree',
+        data: {
+            files: [],
+            searchPath: "/",
+            currentPath: "/",
+            device: thisDevice
+        },
+        methods: {
+            changePath: function() {
+                refreshFileList(this.searchPath)
+                this.currentPath = this.searchPath
+            }
+        }
+    })
+</script>
+
+<script>
+    const {exec} = require('child_process');
+    function refreshFileList(thisPath) {
+        cmd = `adb -s ${thisDevice} shell ls -l ${thisPath} `
+        exec(cmd, (err, stdout, stderr) => {
+            if (err) {
+                console.log(`[ERROR]: ${stderr}`);
+                new Notification('Error', {
+                    body: '无效路径. Invalid Path.'
+                })
+                return;
+            }
+            let tmp_files = []
+            stdout.split("\n").forEach(
+                line => {
+                    line = line.trim()
+                    line = line.replaceAll(" ", ",")
+                    console.log(line)
+                    lineParts = line.split(/,+/)
+                    console.log(lineParts.length)
+                    if (lineParts.length < 7) return;
+                    let one = {
+                        type: lineParts[0].substring(0, 1),
+                        writeable: lineParts[0].substring(2, 3),
+                        alterTime: `${lineParts[5]} ${lineParts[6]}`,
+                        name: lineParts[7],
+                        link: lineParts[9] || null
+                    }
+                    tmp_files.push(one)
+                }
+            )
+            // console.log(JSON.stringify(tmp_files))
+            vFileTree.files = tmp_files
+        })
+    }
+    refreshFileList("/")
+</script>
+
+</body>
+</html>

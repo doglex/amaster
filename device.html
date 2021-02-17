@@ -4,9 +4,28 @@
     <meta charset="UTF-8">
     <script src="lib/moment.js"></script>
     <script src="lib/vue.js"></script>
+    <style>
+        #explorer {
+            display: inline-block;
+            color: white;
+            border: 1px solid #CCC;
+            background: #0e4978;
+            box-shadow: 0 0 5px -1px rgba(0, 0, 0, 0.2);
+            cursor: pointer;
+            vertical-align: middle;
+            max-width: 100px;
+            padding: 5px;
+            text-align: center;
+        }
+
+        #explorer:active {
+            background: rgba(27, 177, 112, 0.1);
+            color: black;
+            box-shadow: 0 0 5px -1px rgba(0, 0, 0, 0.6);
+        }
+    </style>
 </head>
 <body>
-
 
 
 <script>
@@ -18,8 +37,12 @@
     fs.mkdirSync(cacheFolder, {recursive: true})
 </script>
 <div style="alignment:left" id="snapshot">
-    <img v-if="src != null" style='margin-left: 0;max-height:600px;max-width:800px; object-fit: contain' id="realtime-snapshot" :src="src" alt=`snapshot-device` />
+    <img v-if="src != null" style='margin-left: 0;max-height:600px;max-width:800px; object-fit: contain'
+         id="realtime-snapshot" :src="src" alt=`snapshot-device`/>
 </div>
+<div id="explorer" v-on:click="page_explorer($event)"> 资源管理器</div>
+
+
 <script>
     function setIntervalImmediately(func, interval) {
         func();
@@ -28,11 +51,25 @@
 </script>
 
 <script>
+    const ipcRenderer = require('electron').ipcRenderer;
+    const explorer = new Vue({
+        el: '#explorer',
+        data: {},
+        methods: {
+            page_explorer: function (event) {
+                console.log(event)
+                ipcRenderer.sendToHost('rend_page_explorer', thisDevice)
+            }
+        }
+    })
+</script>
+
+<script>
     const {exec} = require('child_process');
     const snapshot = new Vue({
         el: '#snapshot',
         data: {
-            src:null
+            src: null
         }
     })
 

@@ -74,7 +74,7 @@
                 devices = [];
                 stdout.split("\n").forEach(
                     (x) => {
-                        if (!x.includes("model")) return;
+                        if (!x.includes("transport")) return;
                         // console.log("=>", x);
                         x = x.trim();
                         devices.push(x);

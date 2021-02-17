@@ -80,7 +80,7 @@
         if (channel === "rend_page_device") {
             device_name = event.args[0]
             let tab_device = tabGroup.addTab({
-                title: device_name,
+                title: device_name.substring(0,14),
                 src: "device.html",
                 visible: true,
                 webviewAttributes: {
@@ -90,6 +90,21 @@
             });
             localStorage.setItem("lastDevice", device_name)
             tab_device.activate()
+            RenewWebviews();
+        }
+        if (channel === "rend_page_explorer") {
+            device_name = event.args[0]
+            let tab = tabGroup.addTab({
+                title: "E$ " + device_name.substring(0,14),
+                src: "explorer.html",
+                visible: true,
+                webviewAttributes: {
+                    nodeintegration: true,
+                    disablewebsecurity:true
+                }
+            });
+            localStorage.setItem("lastDevice-explorer", device_name)
+            tab.activate()
             RenewWebviews();
         }
 
