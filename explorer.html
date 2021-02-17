@@ -89,7 +89,8 @@
             <span v-if="hoverIndex===i" style="color:black"> &nbsp;&nbsp;
                 | {{humanFileSize(file.size)}}
                 | {{file.alterTime}}
-                | {{file.link}}
+                {{file.link ? "| link <- " + file.link : ""}}
+                {{file.writeable === "w" ? "" : "|只读(ReadOnly)"}}
             </span>
             <span v-if="hoverIndex===i" v-on:click="save(file)" class="btn"><i class="fa fa-download" aria-hidden="true" class="btn"
             ></i>Save</span>
@@ -235,6 +236,7 @@
     }
 
     function refreshFileList(thisPath) {
+        if (thisPath.substr(thisPath.length-1) !== "/") thisPath += "/";
         cmd = `adb -s ${thisDevice} shell ls -l ${thisPath} `
         exec(cmd, (err, stdout, stderr) => {
             if (err) {
@@ -273,7 +275,7 @@
                     tmp_files.push(one)
                 }
             )
-            // console.log(JSON.stringify(tmp_files))
+            console.log(JSON.stringify(tmp_files))
             vFileTree.files = tmp_files
             if (vFileTree.files.length < 100) {
                 vFileTree.useInfinite = false;
