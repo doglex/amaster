@@ -108,7 +108,7 @@
              @mouseover="hoverIndex = i"
 
              class="fileitem">
-            {{(file.type==="d" || file.type==="l") ?file.name + "/" :file.name}}
+            {{ file.name.length > 60 ? file.name.substring(0,60) +"..." :  (file.type==="d" || file.type==="l") ? file.name+ "/" :file.name     }}
             <span v-if="hoverIndex===i" style="color:black"> &nbsp;&nbsp;
                 | {{humanFileSize(file.size)}}
                 | {{file.alterTime}}
@@ -120,6 +120,9 @@
         </div>
     </div>
 </div>
+
+
+
 
 
 <script>
@@ -272,11 +275,11 @@
             let tmp_files = thisPath === "/" ? [] : [
                 {
                     type: "back",
-                    writeable: null,
+                    writeable: "w",
                     alterTime: null,
                     name: "..",
                     link: null,
-                    size:null
+                    size:0
                 }
             ]
             stdout.split("\n").forEach(
@@ -298,7 +301,7 @@
                     tmp_files.push(one)
                 }
             )
-            console.log(JSON.stringify(tmp_files))
+            // console.log(JSON.stringify(tmp_files))
             vFileTree.files = tmp_files
             if (vFileTree.files.length < 100) {
                 vFileTree.useInfinite = false;
@@ -313,6 +316,34 @@
     refreshFileList("/")
 
 
+
+</script>
+
+
+<script>
+    // 文件拖入
+    document.addEventListener('drop', async (event) => {
+        event.preventDefault();
+        event.stopPropagation();
+        for (const f of event.dataTransfer.files) {
+            console.log('File Path of dragged files: ', f.path)
+            await execPromise(`adb -s ${thisDevice} push ${f.path} ${vFileTree.currentPath}`)
+        }
+        refreshFileList(vFileTree.currentPath)
+    });
+
+    document.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+    });
+
+    document.addEventListener('dragenter', (event) => {
+        console.log('File is in the Drop Space');
+    });
+
+    document.addEventListener('dragleave', (event) => {
+        console.log('File has left the Drop Space');
+    });
 
 </script>
 
