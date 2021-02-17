@@ -50,6 +50,7 @@
 
     </style>
     <link rel="stylesheet" href="lib/font-awesome-4.7.0/css/font-awesome.min.css">
+    <script src="lib/moment.js"></script>
 
 </head>
 <body >
@@ -62,9 +63,11 @@
     const path = require('path');
     const cacheFolder = `tmp/${thisDevice}-explorer`
     fs.mkdirSync(cacheFolder, {recursive: true})
+    const downloadFolder = `amaster-download/${thisDevice}`
+    fs.mkdirSync(downloadFolder, {recursive: true})
 </script>
 
-<div id="statusbar" style="position:fixed;top:0"> </div>
+<div id="statusbar" style="position:fixed;bottom:0;width:100%"> </div>
 
 <div id="vFileTree" >
     <div style="font-size:20px;position:fixed;z-index:101;width:100%;margin-top:0">
@@ -91,6 +94,7 @@
 
 
 <script>
+    const spawn = require('child_process').spawn;
     const vFileTree = new Vue({
         el: '#vFileTree',
         data: {
@@ -141,23 +145,43 @@
                 }
 
             },
-            save: function (file) {
-                var div = document.createElement("div");
-                div.style.width = "100px";
-                div.style.height = "100px";
-                div.style.background = "red";
-                div.style.color = "white";
-                div.innerHTML = "Hello";
-                document.getElementById("statusbar").appendChild(div);
-
-                console.log("saving")
+            save: async function (file) {
                 let to_download;
                 if (this.currentPath.substr(this.currentPath.length-1) === "/") {
                     to_download = this.currentPath + file.name
                 } else {
                     to_download = this.currentPath + "/" + file.name
                 }
-                download_path(to_download)
+
+                let div = document.createElement("div");
+                div.id = `status-download-${moment().valueOf()}`;
+                div.style.height = "20px";
+                div.style.color = "black";
+                div.style.background = "linear-gradient(to top right, pink 5%,purple 100%)";
+                div.style.color = "white";
+                div.innerHTML = `Fetching ` + to_download + " ...";
+                document.getElementById("statusbar").appendChild(div);
+
+
+                let cmd = `adb -s ${thisDevice}  pull -p ${to_download} ${downloadFolder}/`
+
+                let handle  = spawn( 'cmd', [ '/c', cmd ] )
+                handle.stdout.on('data', function (data) {
+                    div.innerHTML = `Fetching ` + to_download + "$"+  data.toString()
+                });
+
+                handle.stderr.on('data', function (data) {
+                    div.innerHTML = `Fetching ` + to_download + "$"+ data.toString()
+                });
+
+                handle.on('exit', function (code) {
+                    div.innerHTML = to_download + "=>done!";
+                    setTimeout(
+                        () => div.remove(), 3000
+                    )
+                });
+
+
             }
         }
     })
@@ -165,6 +189,23 @@
 
 <script>
     const {exec} = require('child_process');
+
+    function execPromise(command) {
+        return new Promise(function(resolve, reject) {
+            exec(command, (error, stdout, stderr) => {
+                if (error) {
+                    reject(error);
+                    return;
+                }
+                if (stderr) {
+                    reject(stderr);
+                    return;
+                }
+                resolve(stdout.trim());
+            });
+        });
+    }
+
     function refreshFileList(thisPath) {
         cmd = `adb -s ${thisDevice} shell ls -l ${thisPath} `
         exec(cmd, (err, stdout, stderr) => {
@@ -216,19 +257,6 @@
     }
     refreshFileList("/")
 
-    function download_path(thisPath) {
-        cmd = `adb -s ${thisDevice}  pull ${thisPath} `
-        exec(cmd, (err, stdout, stderr) => {
-            if (err) {
-                console.log(`[ERROR]: ${stderr}`);
-                new Notification('Error', {
-                    body: `[ERROR]: ${stderr}`
-                })
-                return;
-            }
-            console.log(stdout)
-        })
-    }
 
 
 </script>
