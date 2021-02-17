@@ -86,6 +86,11 @@
 
              class="fileitem">
             {{(file.type==="d" || file.type==="l") ?file.name + "/" :file.name}}
+            <span v-if="hoverIndex===i" style="color:black"> &nbsp;&nbsp;
+                | {{humanFileSize(file.size)}}
+                | {{file.alterTime}}
+                | {{file.link}}
+            </span>
             <span v-if="hoverIndex===i" v-on:click="save(file)" class="btn"><i class="fa fa-download" aria-hidden="true" class="btn"
             ></i>Save</span>
         </div>
@@ -190,6 +195,29 @@
 <script>
     const {exec} = require('child_process');
 
+    function humanFileSize(bytes, si=true, dp=1) {
+        const thresh = si ? 1000 : 1024;
+
+        if (Math.abs(bytes) < thresh) {
+            return bytes + ' B';
+        }
+
+        const units = si
+            ? ['kB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB']
+            : ['KiB', 'MiB', 'GiB', 'TiB', 'PiB', 'EiB', 'ZiB', 'YiB'];
+        let u = -1;
+        const r = 10**dp;
+
+        do {
+            bytes /= thresh;
+            ++u;
+        } while (Math.round(Math.abs(bytes) * r) / r >= thresh && u < units.length - 1);
+
+
+        return bytes.toFixed(dp) + ' ' + units[u];
+    }
+
+
     function execPromise(command) {
         return new Promise(function(resolve, reject) {
             exec(command, (error, stdout, stderr) => {
@@ -222,7 +250,8 @@
                     writeable: null,
                     alterTime: null,
                     name: "..",
-                    link: null
+                    link: null,
+                    size:null
                 }
             ]
             stdout.split("\n").forEach(
@@ -238,7 +267,8 @@
                         writeable: lineParts[0].substring(2, 3),
                         alterTime: `${lineParts[5]} ${lineParts[6]}`,
                         name: lineParts[7],
-                        link: lineParts[9] || null
+                        link: lineParts[9] || null,
+                        size: lineParts[4]
                     }
                     tmp_files.push(one)
                 }
