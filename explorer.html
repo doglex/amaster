@@ -22,11 +22,15 @@
 </script>
 
 <div id="vFileTree" >
-    <span> {{device}} </span>
-    <input placeholder="/" type="text" @keyup.enter="changePath" v-model="searchPath">
+    <div style="font-size:20px">
+    <span style="color:green;background:palegreen;width:500px"> {{device.substring(0,14)}} </span>
+    <input placeholder="/" type="text" @keyup.enter="changePath"
+           v-model="searchPath" style="width:calc(100% - 200px);
+           height:20px;font-size:19px;vertical-align:top">
+    </div>
     <ul >
         <div v-for="(file, i) in files">
-            {{(file.type==="d") ?file.name + "/" :file.name}}
+            {{(file.type==="d" || file.type==="l") ?file.name + "/" :file.name}}
         </div>
     </ul>
 </div>
