@@ -4,6 +4,10 @@
     <meta charset="UTF-8">
     <title>Title</title>
     <script src="lib/vue.js"></script>
+    <script>
+        const infiniteScroll = require ('vue-infinite-scroll').infiniteScroll;
+        Vue.use(infiniteScroll)
+    </script>
     <style>
         body {
             background: #333;
@@ -12,6 +16,8 @@
     </style>
 </head>
 <body >
+
+
 <script>
     const thisDevice = localStorage.getItem("lastDevice-explorer")
     // document.write("设备管理器：", thisDevice)
@@ -21,6 +27,8 @@
     fs.mkdirSync(cacheFolder, {recursive: true})
 </script>
 
+
+
 <div id="vFileTree" >
     <div style="font-size:20px">
     <span style="color:green;background:palegreen;width:500px"> {{device.substring(0,14)}} </span>
@@ -28,11 +36,11 @@
            v-model="searchPath" style="width:calc(100% - 200px);
            height:20px;font-size:19px;vertical-align:top">
     </div>
-    <ul >
-        <div v-for="(file, i) in files">
+    <div v-infinite-scroll="loadMore" infinite-scroll-disabled="busy" infinite-scroll-distance="20">
+        <div v-for="(file, i) in showFiles">
             {{(file.type==="d" || file.type==="l") ?file.name + "/" :file.name}}
         </div>
-    </ul>
+    </div>
 </div>
 
 <script>
@@ -40,14 +48,27 @@
         el: '#vFileTree',
         data: {
             files: [],
+            showFiles: [],
             searchPath: "/",
             currentPath: "/",
-            device: thisDevice
+            device: thisDevice,
+            useInfinite: false,
         },
         methods: {
             changePath: function() {
                 refreshFileList(this.searchPath)
                 this.currentPath = this.searchPath
+            },
+            loadMore: function() {
+                if (!this.useInfinite || this.files.length === this.showFiles.length) return;
+                this.busy = true
+                setTimeout(() => {
+                    for (var i = 0, j = 50; i < j && this.showFiles.length < this.files.length; i++) {
+                        this.showFiles.push(this.files[this.showFiles.length])
+                    }
+                    console.log(this.data)
+                    this.busy = false
+                }, 30)
             }
         }
     })
@@ -86,6 +107,14 @@
             )
             // console.log(JSON.stringify(tmp_files))
             vFileTree.files = tmp_files
+            if (vFileTree.files.length < 100) {
+                vFileTree.useInfinite = false;
+                vFileTree.showFiles = vFileTree.files;
+            } else {
+              vFileTree.useInfinite = true;
+              vFileTree.showFiles = vFileTree.files.slice(0,100);
+            }
+
         })
     }
     refreshFileList("/")
