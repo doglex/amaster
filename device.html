@@ -104,7 +104,7 @@
                 });
             });
             let cmd = `adb -s ${thisDevice} shell screencap -p | perl -pe \'s/\\x0D\\x0A/\\x0A/g\' > ${filename}`
-            console.log(cmd)
+            // console.log(cmd)
             exec(cmd, (err, stdout, stderr) => {
                 if (err) {
                     console.log(`[ERROR]: ${stderr}`);

@@ -13,6 +13,21 @@
             background: #333;
             color: white;
         }
+
+        .fileitem {
+
+        }
+        .fileitem:active {
+            background-color: #09cd09;
+            color: gold;
+        }
+        .fileitem:hover {
+            background-color: #9909cd;
+        }
+        .folder {
+            background-color: darkslategrey;
+        }
+
     </style>
 </head>
 <body >
@@ -30,14 +45,19 @@
 
 
 <div id="vFileTree" >
-    <div style="font-size:20px">
+    <div style="font-size:20px;position:fixed;z-index:101;width:100%;margin-top:0">
     <span style="color:green;background:palegreen;width:500px"> {{device.substring(0,14)}} </span>
     <input placeholder="/" type="text" @keyup.enter="changePath"
            v-model="searchPath" style="width:calc(100% - 200px);
            height:20px;font-size:19px;vertical-align:top">
     </div>
-    <div v-infinite-scroll="loadMore" infinite-scroll-disabled="busy" infinite-scroll-distance="20">
-        <div v-for="(file, i) in showFiles">
+    <div style="margin-top:10px">  <br> <br></div>
+    <div v-infinite-scroll="loadMore" infinite-scroll-disabled="busy" infinite-scroll-distance="20"
+    >
+        <div v-for="(file, i) in showFiles" v-on:dblclick="dblClickChangePath(file)"
+             style="width:100%"
+             v-bind:class='{folder: (file.type==="d" || file.type==="l") }'
+             class="fileitem">
             {{(file.type==="d" || file.type==="l") ?file.name + "/" :file.name}}
         </div>
     </div>
@@ -58,17 +78,37 @@
             changePath: function() {
                 refreshFileList(this.searchPath)
                 this.currentPath = this.searchPath
+                if (this.currentPath.substr(this.currentPath.length-1) === "/") {
+                    this.currentPath = this.currentPath.substring(0, this.currentPath.length-1)
+                }
             },
             loadMore: function() {
                 if (!this.useInfinite || this.files.length === this.showFiles.length) return;
                 this.busy = true
                 setTimeout(() => {
-                    for (var i = 0, j = 50; i < j && this.showFiles.length < this.files.length; i++) {
+                    for (let i = 0, j = 50; i < j && this.showFiles.length < this.files.length; i++) {
                         this.showFiles.push(this.files[this.showFiles.length])
                     }
                     console.log(this.data)
                     this.busy = false
                 }, 30)
+            },
+            dblClickChangePath: function(file) {
+                if (file.name === "..") {
+                    tmp_loc = this.currentPath.substring(0, this.currentPath.lastIndexOf("/"))
+                    this.searchPath = tmp_loc.length > 0 ? tmp_loc : "/";
+                    console.log("now current", this.currentPath)
+                    this.changePath()
+                    return
+                }
+                if (file.type==="d" || file.type==="l") {
+                     if (this.currentPath.substr(this.currentPath.length-1) === "/") {
+                        this.searchPath = this.currentPath + file.name
+                    } else {
+                        this.searchPath = this.currentPath + "/" + file.name
+                    }
+                    this.changePath()
+                }
             }
         }
     })
@@ -86,14 +126,22 @@
                 })
                 return;
             }
-            let tmp_files = []
+            let tmp_files = thisPath === "/" ? [] : [
+                {
+                    type: "back",
+                    writeable: null,
+                    alterTime: null,
+                    name: "..",
+                    link: null
+                }
+            ]
             stdout.split("\n").forEach(
                 line => {
                     line = line.trim()
                     line = line.replaceAll(" ", ",")
-                    console.log(line)
+                    // console.log(line)
                     lineParts = line.split(/,+/)
-                    console.log(lineParts.length)
+                    // console.log(lineParts.length)
                     if (lineParts.length < 7) return;
                     let one = {
                         type: lineParts[0].substring(0, 1),
