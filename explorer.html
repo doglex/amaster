@@ -264,12 +264,12 @@
 
     function refreshFileList(thisPath) {
         if (thisPath.substr(thisPath.length - 1) !== "/") thisPath += "/";
-        cmd = `adb -s ${thisDevice} shell ls -l ${thisPath} `
+        cmd = `adb -s ${thisDevice} shell "ls -l ${thisPath} " `
         exec(cmd, (err, stdout, stderr) => {
-            if (err) {
-                console.log(`[Warn]: ${stderr}`);
+            if (err && !err.message.includes("ermission")) {
+                console.log(`[Warn]: ${err}`);
                 new Notification('Warn', {
-                    body: err
+                    body: err.message
                 })
                 // return;
             }
