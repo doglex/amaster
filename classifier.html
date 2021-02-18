@@ -104,9 +104,9 @@
 <br>
 <div id="vContainer">
     <div v-if="scanned">
-        <div class="tool"> 一键下载所有图片</div>
-        <div class="tool"> 一键下载所有音频</div>
-        <div class="tool"> 一键下载所有视频</div>
+        <div class="tool" v-on:click="bigDownload('Image')"> 八线程下载所有图片</div>
+        <div class="tool" v-on:click="bigDownload('Audio')"> 八线程下载所有音频</div>
+        <div class="tool" v-on:click="bigDownload('Video')"> 八线程下载所有视频</div>
     </div>
 
     <div style="font-size:20px;z-index:101;width:100%;margin-top:0">
@@ -136,13 +136,49 @@
         data: {
             byType: {},
             bySuffix: {},
-            files: [],
+            files: {"Image":[], "Video":[], "Audio":[]},
             device: thisDevice,
             scanned: false
         },
         computed: {
             bySuffixWatch: function () {
                 return _.orderBy(this.bySuffix, ["size", "num"], ["desc", "desc"])
+            }
+        },
+        methods: {
+            bigDownload: async function (filetype) {
+                console.log("downloading.",filetype, "..............")
+
+                let div = document.createElement("div");
+                div.id = `status-download-${moment().valueOf()}`;
+                div.style.height = "20px";
+                div.style.color = "black";
+                div.style.background = "linear-gradient(to top right, pink 5%,purple 100%)";
+                div.style.color = "white";
+                div.innerHTML =  "";
+                document.getElementById("statusbar").appendChild(div);
+                let tasks = vContainer.files[filetype]
+                fs.mkdirSync(`${downloadFolder}/ALL-${filetype}/`, {recursive: true})
+                async function fetch_worker(j , num_threads) {
+                    for (let i = 0; i < tasks.length; i++) {
+                        if (i % num_threads !== j) continue;
+                        let cmd = `adb -s ${thisDevice}  pull -p ${tasks[i]} ${downloadFolder}/ALL-${filetype}/`
+                        div.innerHTML = `== ${tasks.length} / ${i + 1}  == : ${tasks[i]} -> ${downloadFolder}/ALL-${filetype}/`;
+                        await execPromise(cmd).then().catch((e) => {
+                            console.log(e)
+                        });
+                    }
+                    if ( j + 1 === num_threads) {
+                        setTimeout(
+                            () => {div.remove()}
+                            , 3000
+                        )
+                    }
+                }
+                let num_threads = 8
+                for (let j = 0; j < num_threads; j++) {
+                    fetch_worker(j,num_threads)
+                }
             }
         }
     })
@@ -250,6 +286,23 @@ ${params.name}: ${humanFileSize(params.value * 1024)} (${params.percent}%)</div>
         return "-"
     }
 
+    const {exec} = require('child_process');
+    function execPromise(command) {
+        return new Promise(function (resolve, reject) {
+            exec(command, (error, stdout, stderr) => {
+                if (error) {
+                    reject(error);
+                    return;
+                }
+                if (stderr) {
+                    reject(stderr);
+                    return;
+                }
+                resolve(stdout.trim());
+            });
+        });
+    }
+
 </script>
 
 <script>
@@ -295,6 +348,10 @@ ${params.name}: ${humanFileSize(params.value * 1024)} (${params.percent}%)</div>
             if (i % 1000 === 1) {
                 vContainer.bySuffix = Object.assign({}, vContainer.bySuffix, {})
                 refreshPie()
+            }
+
+            if (vContainer.files.hasOwnProperty(kind)) {
+                vContainer.files[kind].push(name) // 添加到该类型列表
             }
         }
 
