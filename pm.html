@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>A-Master</title>
+    <link rel="stylesheet" href="electron-tabs.css">
+    <style>
+        body { background:  #333; color: white; font-size:20px}
+        body {
+            padding: 0;
+            margin: 0;
+        }
+
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 16px;
+            background-color: #0f2803;
+        }
+
+        /*定义滚动条轨道
+         内阴影+圆角*/
+        ::-webkit-scrollbar-track {
+            -webkit-box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.3);
+            border-radius: 10px;
+            background-color: #47a50b;
+        }
+
+        /*定义滑块
+         内阴影+圆角*/
+        ::-webkit-scrollbar-thumb {
+            border-radius: 5px;
+            -webkit-box-shadow: inset 0 0 6px rgba(0, 0, 0, .3);
+            background-color: #05fc40;
+        }
+
+        .row {
+            border: 1px solid #ccc;
+            border-bottom-color: #09cd09;
+        }
+        .row .c1 {
+            float: left;
+        }
+
+        .row .c2 {
+            border: 1px solid #ccc;
+            border-bottom-color: red;
+            float: right;
+            background-color: blue;
+        }
+    </style>
+    <script src="lib/vue.js"></script>
+</head>
+<body>
+<script>
+    const thisDevice = localStorage.getItem("lastDevice-pm")
+    document.write("PM：", thisDevice, "：apk文件拖入本窗口即可安装")
+    const fs = require("fs")
+    const path = require('path');
+    const cacheFolder = `tmp/${thisDevice}`
+    fs.mkdirSync(cacheFolder, {recursive: true})
+</script>
+
+
+
+
+
+<script>
+    const {exec} = require('child_process');
+    function execPromise(command) {
+        return new Promise(function (resolve, reject) {
+            exec(command, (error, stdout, stderr) => {
+                if (error) {
+                    reject(error);
+                    return;
+                }
+                if (stderr) {
+                    reject(stderr);
+                    return;
+                }
+                resolve(stdout.trim());
+            });
+        });
+    }
+
+    // 文件拖入
+    document.addEventListener('drop', async (event) => {
+        event.preventDefault();
+        event.stopPropagation();
+        for (const f of event.dataTransfer.files) {
+            console.log('File Path of dragged files: ', f.path)
+            new Notification('Installing', {
+                body: f.path
+            })
+            await execPromise(`adb -s ${thisDevice} install ${f.path}`)
+                .then(
+                    () =>
+                    {
+                        new Notification('Info', {
+                            body: `install ${f.path} success`
+                        })
+                    }
+                ).catch((e) =>
+                {
+                    new Notification('Error', {
+                        body: e.toString()
+                    })
+                }).then(refreshAppList())
+        }
+    });
+
+    document.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+    });
+
+    document.addEventListener('dragenter', (event) => {
+        console.log('File is in the Drop Space');
+    });
+
+    document.addEventListener('dragleave', (event) => {
+        console.log('File has left the Drop Space');
+    });
+
+</script>
+
+
+<div id="vTable">
+    <hr>
+    <div style="font-size:24px;color:green"> 第三方应用 </div>
+    <div v-for="(p,i) in third" class="row">
+        <span class="c1">({{i+1}}) => {{p}}  </span>
+        <span class="c2" v-on:click="uninstall(p)">尝试卸载 {{p.substr(p.lastIndexOf(".") + 1)}}</span>
+        <div style="clear:both;"></div>
+    </div>
+    <hr>
+    <div style="font-size:24px;color:green"> 系统应用 </div>
+    <div v-for="(p,i) in sys" class="row">
+        <span class="c1">({{i+1}}) => {{p}}  </span>
+        <span class="c2" v-on:click="uninstall(p)">尝试卸载 {{p.substr(p.lastIndexOf(".") + 1)}}</span>
+        <div style="clear:both;"></div>
+    </div>
+    <hr>
+</div>
+<script>
+
+    const vTable = new Vue({
+        el:"#vTable",
+        data: {
+            "third":[],
+            "sys":[],
+        },
+        methods: {
+            uninstall: function (p) {
+                cmd = `adb -s ${thisDevice} uninstall ${p}`
+                execPromise(cmd).then(() =>
+                    {
+                        new Notification('Info', {
+                            body: `uninstall ${p} success`
+                        })
+                    }
+                ).catch((e) =>
+                    {
+                        new Notification('Error', {
+                            body: e.toString()
+                        })
+                    }
+                ).then(refreshAppList())
+            }
+        }
+    })
+
+    function refreshAppList() {
+        vTable.third = []
+        vTable.sys = []
+        cmd_third = `adb -s ${thisDevice} shell pm list packages -3`
+        execPromise(cmd_third).then(
+            (r) => {
+                console.log(r)
+                r.split("\n").forEach(
+                    (p) => vTable.third.push(p.replace("package:", ""))
+                )
+            }
+        )
+        cmd_sys = `adb -s ${thisDevice} shell pm list packages -s`
+        execPromise(cmd_sys).then(
+            (r) => {
+                console.log(r)
+                r.split("\n").forEach(
+                    (p) => vTable.sys.push(p.replace("package:", ""))
+                )
+            }
+        )
+    }
+    refreshAppList()
+
+</script>
+
+
+</body>
+</html>

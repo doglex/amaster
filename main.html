@@ -122,6 +122,21 @@
             tab.activate()
             RenewWebviews();
         }
+        if (channel === "rend_page_pm") {
+            device_name = event.args[0]
+            let tab = tabGroup.addTab({
+                title: "P$ " + device_name.substring(0,14),
+                src: "pm.html",
+                visible: true,
+                webviewAttributes: {
+                    nodeintegration: true,
+                    disablewebsecurity:true
+                }
+            });
+            localStorage.setItem("lastDevice-pm", device_name)
+            tab.activate()
+            RenewWebviews();
+        }
 
     }
 

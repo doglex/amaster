@@ -43,6 +43,7 @@
 </div>
 <div id="explorer" v-on:click="page_explorer($event)" class="tool"> 资源管理器</div>
 <div id="classifier" v-on:click="page_classifier($event)" class="tool"> 文件类型分析 </div>
+<div id="pm" v-on:click="page_pm($event)" class="tool"> 应用管理 </div>
 
 
 <script>
@@ -71,6 +72,17 @@
             page_classifier: function (event) {
                 console.log(event)
                 ipcRenderer.sendToHost('rend_page_classifier', thisDevice)
+            }
+        }
+    })
+
+    const pm = new Vue({
+        el: '#pm',
+        data: {},
+        methods: {
+            page_pm: function (event) {
+                console.log(event)
+                ipcRenderer.sendToHost('rend_page_pm', thisDevice)
             }
         }
     })
