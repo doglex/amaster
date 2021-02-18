@@ -2,6 +2,9 @@
 安卓 电脑助手 ： 同步文件
 
 
+# Rely 
++ Android Debug Bridge version 1.0.41 + 
+
 # develop 
 ```
 npm install

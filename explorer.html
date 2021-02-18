@@ -404,6 +404,51 @@
             }
         })
     )
+    menu.append(
+        new MenuItem({
+            label: "终端(Terminal)",  async click() {
+                let div = document.createElement("div");
+                div.id = `status-cmd-${moment().valueOf()}`;
+                div.style.height = "20px";
+                div.style.color = "black";
+                div.style.background = "linear-gradient(to top right, pink 5%,green 100%)";
+                div.style.color = "white";
+
+                await prompt({
+                    title: 'Prompt example',
+                    label: 'Command',
+                    value: '',
+                    type: 'input',
+                    icon: "lib/fav.ico",
+                    customStylesheet:"lib/prompt.css",
+                    alwaysOnTop:true,
+                }).then((r) => {
+                    if (r === null) {
+                        console.log('user cancelled');
+                    } else {
+                        console.log('result', r);
+                        div.innerHTML = `executing: ${r}`;
+                        document.getElementById("statusbar").appendChild(div);
+                        execPromise(`adb -s ${thisDevice} shell "cd ${vFileTree.currentPath} && ${r}" `)
+                            .then(
+                                (stdout) => {
+                                    div.remove();
+                                    console.log(dialog.showMessageBox({ type:"info", "message":stdout }))
+                                }
+                            )
+                            .catch(
+                            (error) => {
+                                div.remove();
+                                console.log(dialog.showMessageBox({ type:"error", "message":error.toString() }))
+
+                            })
+                    }
+                }).catch((error) => {
+                    div.remove();
+                    console.log(dialog.showMessageBox({ type:"error", "message":error.toString() }))
+                    });
+            }
+        }))
 
     window.addEventListener('contextmenu', (e) => {
         e.preventDefault()
