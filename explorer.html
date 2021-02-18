@@ -390,6 +390,21 @@
                 });
         }
     }))
+    menu.append(
+        new MenuItem({
+            label: "删除(Del)", async click() {
+               await execPromise(`adb -s ${thisDevice} shell "cd ${vFileTree.currentPath} && rm -rf ${vFileTree.showFiles[vFileTree.hoverIndex].name}" `).catch(
+                    (error) => {
+                        new Notification('Error', {
+                                body: error
+                            }
+                        )
+                    });
+                refreshFileList(vFileTree.currentPath)
+            }
+        })
+    )
+
     window.addEventListener('contextmenu', (e) => {
         e.preventDefault()
         menu.popup({window: remote.getCurrentWindow()})
