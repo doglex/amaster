@@ -59,6 +59,7 @@
     </style>
     <script src="lib/moment.js"></script>
     <script src="lib/lodash.js"></script>
+    <script src="lib/echarts.js"></script>
 </head>
 <body>
 <script>
@@ -75,22 +76,27 @@
 
 <div id="statusbar" style="position:fixed;bottom:0;width:100%"></div>
 <!--<div id="statusbar"></div>-->
+<body>
+<div id="pie" style="width: 600px;height:400px;"></div>
+</body>
+
+<br>
 <div id="vContainer">
     <div style="font-size:20px;z-index:101;width:100%;margin-top:0">
         <span style="color:green;background:palegreen;width:500px"> {{device.substring(0, 14)}} 文件分类 </span>
     </div>
     <div class="div-table">
-        <div  class="div-table-row">
-            <div class="div-table-col" align="center"> # </div>
-            <div class="div-table-col"> 类别 </div>
-            <div class="div-table-col"> 文件类型 </div>
-            <div class="div-table-col"> 占磁盘大小 </div>
-            <div class="div-table-col"> 文件数 </div>
+        <div class="div-table-row">
+            <div class="div-table-col" align="center"> #</div>
+            <div class="div-table-col"> 类别</div>
+            <div class="div-table-col"> 文件类型</div>
+            <div class="div-table-col"> 占磁盘大小</div>
+            <div class="div-table-col"> 文件数</div>
         </div>
         <div v-for="(item,  index) in  bySuffixWatch" class="div-table-row">
-            <div class="div-table-col"> {{index}} </div>
+            <div class="div-table-col"> {{index}}</div>
             <div class="div-table-col"> {{item.kind}}</div>
-            <div class="div-table-col">.{{item.suffix}} </div>
+            <div class="div-table-col">.{{item.suffix}}</div>
             <div class="div-table-col">{{humanFileSize(item.size * 1024)}}</div>
             <div class="div-table-col"> {{item.num}}</div>
         </div>
@@ -111,6 +117,55 @@
             }
         }
     })
+</script>
+<script>
+    const pie = echarts.init(document.getElementById('pie'))
+    let option = {
+        textStyle: {
+            fontSize: 16,
+            color: "white"
+        },
+        tooltip: {
+            backgroundColor: 'rgba(0, 0, 0, 0)',
+            displayColors: false,
+            trigger: 'item',
+            formatter: function (params) {
+                return `<div style="color:white;background-color:transparent;margin:0;padding:0;display:block;">
+${params.name}: ${humanFileSize(params.value)} (${params.percent}%)</div>`;
+            }
+        },
+        calculable: true,
+        series: [
+            {
+                type: 'pie',
+                radius: [100, 160],
+                center: ['50%', '50%'],
+                color: ['#a3f153', '#521477', '#c6b769', '#e07144',
+                    '#3b2c85', '#930f1f', '#364ddb', '#e32bef',
+                    '#5fe571', '#dbe04b', '#092b15', '#1399f3'],
+                roseType : 'area',
+                label: {
+                    normal: {
+                        show: true,
+                        color: 'white',
+                        formatter: function (params) {
+                            return `${params.name}(${params.percent}%)`;
+                        }
+                    }
+                },
+                data: [],
+                animation: false
+            }
+        ]
+    };
+
+    function refreshPie() {
+        // let option = myChart.getOption();
+        option.series[0].data = _.orderBy(vContainer.byType, "value");
+        pie.setOption(option);
+    }
+
+    refreshPie()
 </script>
 
 <script>
@@ -160,7 +215,7 @@
             "Book: mobi epub azw1 azw3 azw4 azw6 azw cbr cbz pdf ppt odp ods xls xlsx csv ics vcf",
         ]
         suffix = suffix.replaceAll("_", "")
-        for (let i=0; i< types.length; i++) {
+        for (let i = 0; i < types.length; i++) {
             if (types[i].includes(suffix)) return types[i].split(":")[0]
         }
         return "-"
@@ -203,14 +258,24 @@
             {"size": 0, "num": 0, "suffix": suffix, "kind": kind};
         vContainer.bySuffix[suffix].size += size
         vContainer.bySuffix[suffix].num += 1
-        if (i % 1000 === 1) vContainer.bySuffix = Object.assign({}, vContainer.bySuffix, {})
+        if (kind !== "-") {
+            if (!vContainer.byType.hasOwnProperty(kind)) vContainer.byType[kind] =
+                {"value": 0, "name": kind}
+            vContainer.byType[kind].value += size
+
+            if (i % 1000 === 1) {
+                vContainer.bySuffix = Object.assign({}, vContainer.bySuffix, {})
+                refreshPie()
+            }
+        }
 
     })
     cspr.on('exit', function (code) {
         console.log('child process exited with code ' + code.toString());
         div.innerHTML = div.innerHTML + "\t扫描完成. Scan Ok."
         vContainer.bySuffix = Object.assign({}, vContainer.bySuffix, {})
-        console.log(JSON.stringify(vContainer.bySuffix))
+        refreshPie()
+        console.log(JSON.stringify(vContainer.byType))
         setTimeout(
             () => {
                 div.remove()
