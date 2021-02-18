@@ -107,6 +107,21 @@
             tab.activate()
             RenewWebviews();
         }
+        if (channel === "rend_page_classifier") {
+            device_name = event.args[0]
+            let tab = tabGroup.addTab({
+                title: "C$ " + device_name.substring(0,14),
+                src: "classifier.html",
+                visible: true,
+                webviewAttributes: {
+                    nodeintegration: true,
+                    disablewebsecurity:true
+                }
+            });
+            localStorage.setItem("lastDevice-classifier", device_name)
+            tab.activate()
+            RenewWebviews();
+        }
 
     }
 

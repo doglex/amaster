@@ -5,20 +5,21 @@
     <script src="lib/moment.js"></script>
     <script src="lib/vue.js"></script>
     <style>
-        #explorer {
-            display: inline-block;
+        .tool {
+            display: block;
             color: white;
             border: 1px solid #CCC;
             background: #0e4978;
             box-shadow: 0 0 5px -1px rgba(0, 0, 0, 0.2);
             cursor: pointer;
             vertical-align: middle;
+            margin-top: 5px;
             max-width: 100px;
             padding: 5px;
             text-align: center;
         }
 
-        #explorer:active {
+        .tool :active {
             background: rgba(27, 177, 112, 0.1);
             color: black;
             box-shadow: 0 0 5px -1px rgba(0, 0, 0, 0.6);
@@ -40,7 +41,8 @@
     <img v-if="src != null" style='margin-left: 0;max-height:600px;max-width:800px; object-fit: contain'
          id="realtime-snapshot" :src="src" alt=`snapshot-device`/>
 </div>
-<div id="explorer" v-on:click="page_explorer($event)"> 资源管理器</div>
+<div id="explorer" v-on:click="page_explorer($event)" class="tool"> 资源管理器</div>
+<div id="classifier" v-on:click="page_classifier($event)" class="tool"> 文件类型分析 </div>
 
 
 <script>
@@ -59,6 +61,16 @@
             page_explorer: function (event) {
                 console.log(event)
                 ipcRenderer.sendToHost('rend_page_explorer', thisDevice)
+            }
+        }
+    })
+    const classifier = new Vue({
+        el: '#classifier',
+        data: {},
+        methods: {
+            page_classifier: function (event) {
+                console.log(event)
+                ipcRenderer.sendToHost('rend_page_classifier', thisDevice)
             }
         }
     })

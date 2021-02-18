@@ -198,7 +198,7 @@
 
                 let cmd = `adb -s ${thisDevice}  pull -p ${to_download} ${downloadFolder}/`
 
-                let handle = spawn('cmd', ['/c', cmd])
+                let handle = process.platform === "win32" ? spawn('powershell', ['/c', cmd]) : spawn(cmd);
                 handle.stdout.on('data', function (data) {
                     div.innerHTML = `Fetching ` + to_download + "$" + data.toString()
                 });
