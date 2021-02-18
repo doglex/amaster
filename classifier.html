@@ -56,6 +56,26 @@
             background-color: black;
         }
 
+        .tool {
+            display: inline-block;
+            color: white;
+            border: 1px solid #CCC;
+            background: #0e4978;
+            box-shadow: 0 0 5px -1px rgba(0, 0, 0, 0.2);
+            cursor: pointer;
+            vertical-align: middle;
+            margin-top: 5px;
+            max-width: 200px;
+            padding: 5px;
+            text-align: center;
+        }
+
+        .tool :active {
+            background: rgba(27, 177, 112, 0.1);
+            color: black;
+            box-shadow: 0 0 5px -1px rgba(0, 0, 0, 0.6);
+        }
+
     </style>
     <script src="lib/moment.js"></script>
     <script src="lib/lodash.js"></script>
@@ -76,14 +96,22 @@
 
 <div id="statusbar" style="position:fixed;bottom:0;width:100%"></div>
 <!--<div id="statusbar"></div>-->
-<body>
+
 <div id="pie" style="width: 600px;height:400px;"></div>
-</body>
+
 
 <br>
+<br>
 <div id="vContainer">
+    <div v-if="scanned">
+        <div class="tool"> 一键下载所有图片</div>
+        <div class="tool"> 一键下载所有音频</div>
+        <div class="tool"> 一键下载所有视频</div>
+    </div>
+
     <div style="font-size:20px;z-index:101;width:100%;margin-top:0">
-        <span style="color:green;background:palegreen;width:500px"> {{device.substring(0, 14)}} 文件分类 </span>
+        &nbsp;
+        <!--        <span style="color:green;background:palegreen;width:500px"> {{device.substring(0, 14)}} 文件分类 </span>-->
     </div>
     <div class="div-table">
         <div class="div-table-row">
@@ -110,6 +138,7 @@
             bySuffix: {},
             files: [],
             device: thisDevice,
+            scanned: false
         },
         computed: {
             bySuffixWatch: function () {
@@ -131,7 +160,7 @@
             trigger: 'item',
             formatter: function (params) {
                 return `<div style="color:white;background-color:transparent;margin:0;padding:0;display:block;">
-${params.name}: ${humanFileSize(params.value)} (${params.percent}%)</div>`;
+${params.name}: ${humanFileSize(params.value * 1024)} (${params.percent}%)</div>`;
             }
         },
         calculable: true,
@@ -143,7 +172,7 @@ ${params.name}: ${humanFileSize(params.value)} (${params.percent}%)</div>`;
                 color: ['#a3f153', '#521477', '#c6b769', '#e07144',
                     '#3b2c85', '#930f1f', '#364ddb', '#e32bef',
                     '#5fe571', '#dbe04b', '#092b15', '#1399f3'],
-                roseType : 'area',
+                roseType: 'area',
                 label: {
                     normal: {
                         show: true,
@@ -275,6 +304,7 @@ ${params.name}: ${humanFileSize(params.value)} (${params.percent}%)</div>`;
         div.innerHTML = div.innerHTML + "\t扫描完成. Scan Ok."
         vContainer.bySuffix = Object.assign({}, vContainer.bySuffix, {})
         refreshPie()
+        vContainer.scanned = true
         console.log(JSON.stringify(vContainer.byType))
         setTimeout(
             () => {
