@@ -3,8 +3,198 @@
 <head>
     <meta charset="UTF-8">
     <title>Title</title>
+    <script src="lib/vue.js"></script>
+    <style>
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 16px;
+            background-color: #0f2803;
+        }
+
+        /*定义滚动条轨道
+         内阴影+圆角*/
+        ::-webkit-scrollbar-track {
+            -webkit-box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.3);
+            border-radius: 10px;
+            background-color: #47a50b;
+        }
+
+        /*定义滑块
+         内阴影+圆角*/
+        ::-webkit-scrollbar-thumb {
+            border-radius: 5px;
+            -webkit-box-shadow: inset 0 0 6px rgba(0, 0, 0, .3);
+            background-color: #05fc40;
+        }
+
+        body {
+            background: #333;
+            color: white;
+            font-size: 16px;
+        }
+
+        .div-table {
+            display: table;
+            width: auto;
+            background-color: #aaaaaa;
+            /*border-style: dotted dashed solid double;*/
+            border: 1px solid green;
+            border-spacing: 1px;
+        }
+
+        .div-table-row {
+            display: table-row;
+            width: auto;
+            clear: both;
+        }
+
+        .div-table-col {
+            border: 0;
+            float: left; /* fix for  buggy browsers */
+            display: table-column;
+            width: 150px;
+            background-color: black;
+        }
+
+    </style>
+    <script src="lib/moment.js"></script>
+    <script src="lib/lodash.js"></script>
 </head>
 <body>
-扫描器
+<script>
+    const thisDevice = localStorage.getItem("lastDevice-classifier")
+    // document.write("文件分析：", thisDevice)
+    const fs = require("fs")
+    console.log(fs)
+    const path = require('path');
+    const cacheFolder = `tmp/${thisDevice}-classifier`
+    fs.mkdirSync(cacheFolder, {recursive: true})
+    const downloadFolder = `amaster-download/${thisDevice}`
+    fs.mkdirSync(downloadFolder, {recursive: true})
+</script>
+
+<div id="statusbar" style="position:fixed;bottom:0;width:100%"></div>
+<!--<div id="statusbar"></div>-->
+<div id="vContainer">
+    <div style="font-size:20px;z-index:101;width:100%;margin-top:0">
+        <span style="color:green;background:palegreen;width:500px"> {{device.substring(0, 14)}} 文件分类 </span>
+    </div>
+    <div class="div-table">
+        <div  class="div-table-row">
+            <div class="div-table-col" align="center"> # </div>
+            <div class="div-table-col"> 文件类型 </div>
+            <div class="div-table-col"> 占磁盘大小 </div>
+            <div class="div-table-col"> 文件数 </div>
+        </div>
+        <div v-for="(item,  index) in  bySuffixWatch" class="div-table-row">
+            <div class="div-table-col"> {{index}} </div>
+            <div class="div-table-col">.{{item.suffix}} </div>
+            <div class="div-table-col">{{humanFileSize(item.size * 1024)}}</div>
+            <div class="div-table-col"> {{item.num}}</div>
+        </div>
+    </div>
+</div>
+<script>
+    const vContainer = new Vue({
+        el: "#vContainer",
+        data: {
+            byType: {},
+            bySuffix: {},
+            files: [],
+            device: thisDevice,
+        },
+        computed: {
+            bySuffixWatch: function () {
+                return _.orderBy(this.bySuffix, ["size", "num"], ["desc", "desc"])
+            }
+        }
+    })
+</script>
+
+<script>
+    function getSuffix(filename) {
+        let last = filename.substring(filename.length - 6)
+        // console.log(last)
+        if (!last.includes(".")) return "Unknown";
+        let lastParts = last.split(".")
+        // console.log(JSON.stringify(vContainer.bySuffix))
+        return lastParts[lastParts.length - 1].toLowerCase()
+    }
+
+    function humanFileSize(bytes, si = true, dp = 1) {
+        const thresh = si ? 1000 : 1024;
+
+        if (Math.abs(bytes) < thresh) {
+            return bytes + ' B';
+        }
+
+        const units = si
+            ? ['kB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB']
+            : ['KiB', 'MiB', 'GiB', 'TiB', 'PiB', 'EiB', 'ZiB', 'YiB'];
+        let u = -1;
+        const r = 10 ** dp;
+
+        do {
+            bytes /= thresh;
+            ++u;
+        } while (Math.round(Math.abs(bytes) * r) / r >= thresh && u < units.length - 1);
+
+
+        return bytes.toFixed(dp) + ' ' + units[u];
+    }
+</script>
+
+<script>
+    const readline = require('readline');
+    const spawn = require('child_process').spawn;
+
+    let div = document.createElement("div");
+    div.id = `status-scan-${moment().valueOf()}`;
+    div.style.height = "20px";
+    div.style.color = "black";
+    div.style.background = "linear-gradient(to top right, gold 5%,  blue 100%)";
+    div.style.color = "white";
+    div.innerHTML = "Scan ... ";
+    document.getElementById("statusbar").appendChild(div);
+
+    let cmd = ` adb -s ${thisDevice}  shell \" du -a /data/ /storage/self/primary/ 2>/dev/null  \" `
+    console.log(cmd)
+    let cspr = process.platform === "win32" ? spawn('powershell', ['/c', cmd]) : spawn(cmd);
+    let rl = readline.createInterface({input: cspr.stdout});
+    let i = 0;
+    rl.on('line', line => {
+        line = line.trim();
+        div.innerHTML = `Scan ${i++} => ${line}`
+
+        if (line.substr(line.length - 1) === "/") return;  // 文件夹
+        let lineParts = line.split("\t")
+        let size = parseInt(lineParts[0])
+        let name = lineParts[1]
+        if (name == null) return;
+        let suffix = getSuffix(name)
+        // suffix = "a"
+        // console.log(suffix)
+        if (!vContainer.bySuffix.hasOwnProperty(suffix)) vContainer.bySuffix[suffix] =
+            {"size": 0, "num": 0, "suffix": suffix};
+        vContainer.bySuffix[suffix].size += size
+        vContainer.bySuffix[suffix].num += 1
+        if (i % 1000 === 1) vContainer.bySuffix = Object.assign({}, vContainer.bySuffix, {})
+
+    })
+    cspr.on('exit', function (code) {
+        console.log('child process exited with code ' + code.toString());
+        div.innerHTML = div.innerHTML + "\t扫描完成. Scan Ok."
+        vContainer.bySuffix = Object.assign({}, vContainer.bySuffix, {})
+        console.log(JSON.stringify(vContainer.bySuffix))
+        setTimeout(
+            () => {
+                div.remove()
+            }, 3000
+        )
+    });
+
+</script>
+
+
 </body>
 </html>
