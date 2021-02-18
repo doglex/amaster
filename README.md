@@ -4,6 +4,7 @@
 
 # Rely 
 + Android Debug Bridge version 1.0.41 + 
++ perl (optional)
 
 # develop 
 ```
