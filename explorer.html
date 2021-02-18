@@ -102,8 +102,8 @@
            height:20px;font-size:19px;vertical-align:top">
     </div>
     <div style="margin-top:10px"><br> <br></div>
-    <div v-infinite-scroll="loadMore" infinite-scroll-disabled="busy" infinite-scroll-distance="20"
-    >
+    <div style="font-size:20px"> 计数:{{files.length}} </div>
+    <div v-infinite-scroll="loadMore" infinite-scroll-disabled="busy" infinite-scroll-distance="20">
         <div v-for="(file, i) in showFiles" v-on:dblclick="dblClickChangePath(file)"
              style="width:100%"
              v-bind:class='{folder: (file.type==="d" || file.type==="l") }'
@@ -267,11 +267,11 @@
         cmd = `adb -s ${thisDevice} shell ls -l ${thisPath} `
         exec(cmd, (err, stdout, stderr) => {
             if (err) {
-                console.log(`[ERROR]: ${stderr}`);
-                new Notification('Error', {
-                    body: '无效路径. Invalid Path.'
+                console.log(`[Warn]: ${stderr}`);
+                new Notification('Warn', {
+                    body: err
                 })
-                return;
+                // return;
             }
             let tmp_files = thisPath === "/" ? [] : [
                 {
@@ -283,8 +283,10 @@
                     size: 0
                 }
             ]
+            console.log(stdout)
             stdout.split("\n").forEach(
                 line => {
+                    if (line.includes("ermission")) return;
                     line = line.trim()
                     line = line.replaceAll(" ", ",")
                     // console.log(line)
