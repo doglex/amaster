@@ -82,12 +82,14 @@
     <div class="div-table">
         <div  class="div-table-row">
             <div class="div-table-col" align="center"> # </div>
+            <div class="div-table-col"> 类别 </div>
             <div class="div-table-col"> 文件类型 </div>
             <div class="div-table-col"> 占磁盘大小 </div>
             <div class="div-table-col"> 文件数 </div>
         </div>
         <div v-for="(item,  index) in  bySuffixWatch" class="div-table-row">
             <div class="div-table-col"> {{index}} </div>
+            <div class="div-table-col"> {{item.kind}}</div>
             <div class="div-table-col">.{{item.suffix}} </div>
             <div class="div-table-col">{{humanFileSize(item.size * 1024)}}</div>
             <div class="div-table-col"> {{item.num}}</div>
@@ -142,6 +144,28 @@
 
         return bytes.toFixed(dp) + ' ' + units[u];
     }
+
+    function getType(suffix) {
+        if (suffix === "unknown") return "-"
+        let types = [
+            "Image: ico 3dm 3ds max bmp dds gif jpg jpg_ jpeg png psd xcf tga thm tif tiff yuv ai eps ps svg dwg dxf gpx kml kmz webp",
+            "Video: video 3g2 3gp aaf asf avchd avi drc flv m2v m4p m4v mkv mng mov mp2 mp4 mpe mpeg mpg mpv mxf nsv ogg ogv ogm qt rm rmvb roq srt svi vob webm wmv yuv",
+            "Audio: aac aiff ape au flac gsm it m3u m4a mid mod mp3 mpa pls ra s3m sid wav wma xm",
+            "Archive: 7z a apk ar bz2 cab cpio deb dmg egg gz iso jar lha mar pea rar rpm s7z shar tar tbz2 tgz tlz war whl xpi zip zipx xz pak",
+            "Exec: exe msi bin command sh bat crx a so o ",
+            "Code: c cc class clj cpp cs cxx el go h java lua m m4 php pl po py rb rs sh swift vb vcxproj xcodeproj xml diff patch html js " +
+            "html htm css js jsx less scss wasm php",
+            "Font: eot otf ttf woff woff2",
+            "Text: doc docx ebook log md msg odt org pages rtf rst tex txt wpd wps data dat cnt tlog json pyi",
+            "Book: mobi epub azw1 azw3 azw4 azw6 azw cbr cbz pdf ppt odp ods xls xlsx csv ics vcf",
+        ]
+        suffix = suffix.replaceAll("_", "")
+        for (let i=0; i< types.length; i++) {
+            if (types[i].includes(suffix)) return types[i].split(":")[0]
+        }
+        return "-"
+    }
+
 </script>
 
 <script>
@@ -172,10 +196,11 @@
         let name = lineParts[1]
         if (name == null) return;
         let suffix = getSuffix(name)
+        let kind = getType(suffix)
         // suffix = "a"
         // console.log(suffix)
         if (!vContainer.bySuffix.hasOwnProperty(suffix)) vContainer.bySuffix[suffix] =
-            {"size": 0, "num": 0, "suffix": suffix};
+            {"size": 0, "num": 0, "suffix": suffix, "kind": kind};
         vContainer.bySuffix[suffix].size += size
         vContainer.bySuffix[suffix].num += 1
         if (i % 1000 === 1) vContainer.bySuffix = Object.assign({}, vContainer.bySuffix, {})
