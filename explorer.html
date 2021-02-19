@@ -353,6 +353,13 @@
 
     menu.append(
         new MenuItem({
+            label: "刷新(Refresh)", async click() {
+                refreshFileList(vFileTree.currentPath)
+            }
+        })
+    )
+    menu.append(
+        new MenuItem({
             label: "删除(Del)", async click() {
                await execPromise(`adb -s ${thisDevice} shell "cd ${vFileTree.currentPath} && rm -rf ${vFileTree.showFiles[vFileTree.menuIndex].name}" `).catch(
                     (error) => {
