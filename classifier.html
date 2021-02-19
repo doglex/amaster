@@ -83,7 +83,7 @@
 </head>
 <body>
 <script>
-    const getType = require("./lib/mytype.js").getType
+    const {getType, getSuffix} = require("./lib/mytype.js")
     const execPromise = require("./lib/myexec.js").execPromise;
     console.log("hello.........", getType)
     const thisDevice = localStorage.getItem("lastDevice-classifier")
@@ -237,14 +237,6 @@ ${params.name}: ${humanFileSize(params.value * 1024)} (${params.percent}%)</div>
 </script>
 
 <script>
-    function getSuffix(filename) {
-        let last = filename.substring(filename.length - 6)
-        // console.log(last)
-        if (!last.includes(".")) return "Unknown";
-        let lastParts = last.split(".")
-        // console.log(JSON.stringify(vContainer.bySuffix))
-        return lastParts[lastParts.length - 1].toLowerCase()
-    }
 
     function humanFileSize(bytes, si = true, dp = 1) {
         const thresh = si ? 1000 : 1024;
