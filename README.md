@@ -1,6 +1,8 @@
 # amaster
 安卓 电脑助手 ： 同步文件
 
+Guide Video: https://www.bilibili.com/video/BV18y4y1J7Xi/
+
 ![image](./res/1.jpg)
 ![image](./res/2.png)
 ![image](./res/3.png)
