@@ -1,6 +1,12 @@
 # amaster
 安卓 电脑助手 ： 同步文件
 
+![image](./res/1.jpg)
+![image](./res/2.png)
+![image](./res/3.png)
+![image](./res/4.png)
+![image](./res/6.jpg)
+
 
 # Rely 
 + Android Debug Bridge version 1.0.41 + 
