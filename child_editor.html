@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
+    <meta http-equiv="Content-type" content="text/html;charset=UTF-8" />
     <title>Title</title>
     <script src="lib/codemirror/lib/codemirror.js"></script>
     <link rel="stylesheet" href="lib/codemirror/lib/codemirror.css">
@@ -78,41 +78,126 @@
         }
     </style>
     <link rel="stylesheet" href="lib/codemirror/theme/dracula.css">
+    <script src="lib/moment.js"></script>
 
 </head>
 <body>
+<div id="statusbar" style="position:fixed;bottom:0;width:100%;z-index:999"></div>
 <div onclick="save2PC()" class="tool"> ➡💻 </div>
-<div onclick="save2PC()" class="tool">  📲</div>
+<div onclick="save2Device()" class="tool">  📲</div>
 <hr>
 <div id="draw"></div>
+<div id="footer" style="position:fixed;bottom:0;width:100%;z-index:1;font-size: 10px"></div>
 
 <script>
     const thisDevice = localStorage.getItem("editor-device")
     const thisFilename = localStorage.getItem("editor-filename")
     document.title = `Editor$   ${thisFilename.substring(thisFilename.length - 60)} on ${thisDevice.substring(thisDevice.length - 15)}`
-    document.write("：", thisDevice, "-", thisFilename)
     const fs = require("fs")
     const path = require('path');
-    const cacheFolder = `tmp/${thisDevice}-explorer`
+    const cacheFolder = `tmp/${thisDevice}-editor`
     fs.mkdirSync(cacheFolder, {recursive: true})
     const downloadFolder = `amaster-download/${thisDevice}`
     fs.mkdirSync(downloadFolder, {recursive: true})
 </script>
 
-<script>
-    // var myCodeMirror = CodeMirror();
-    area = document.getElementById("draw")
 
-    var cm = CodeMirror(area, {
-        value: "function myScript(){return 100;}\x01\x02\ngood",
-        mode: "javascript",
-        lineWrapping: true,
-        lineNumbers: true,
-        spellcheck: true,
-        theme: "dracula"
-    });
+<script>
+    let isLoad = false
+    let someWrong = 0
+    const {getType, getSuffix} = require("./lib/mytype.js")
+    const execPromise = require("./lib/myexec.js").execPromise;
+    let cm;
+    const area = document.getElementById("draw");
+    let filenameParts = thisFilename.split("/")
+    const simpleFileName = filenameParts[filenameParts.length-1]
+    let tmp_file_1 = `editor-${moment().valueOf()}-${simpleFileName}`
+    let tmp_file_2 = `editor-stash-${moment().valueOf()}-${simpleFileName}`
+    const footer = document.getElementById("footer")
+    let filesize;
+
+
+    const fsp = require('fs').promises;
+
+    async function load() {
+        // 大小检测
+        await execPromise(`adb -s ${thisDevice} shell du ${thisFilename}`).then(
+            (r) => {
+                filesize = parseInt(r.split(" ")[0]);
+                footer.innerHTML = "info:" + thisDevice + "-" + thisFilename + "-filesize:" + filesize;
+                if (filesize > 2000 || filesize == null) { // 2MB
+                    someWrong += 1;
+                    new Notification('Too Big', {
+                        body: "cannot load since file too big"
+                    })
+                }
+            }
+        ).catch((e) => {
+            someWrong += 1
+            new Notification('Error', {
+                body: e.toString()
+            })
+        })
+        if (someWrong > 0) return;
+
+        footer.innerHTML = "info:" + thisDevice + "-" + thisFilename + "-filesize:" + filesize + "|loading";
+        // 下载
+        await execPromise(`adb -s ${thisDevice} pull ${thisFilename} ${cacheFolder}/${tmp_file_1}`).then(
+            () => console.log("pulled", thisFilename)
+        ).catch((e) => {
+            someWrong += 1
+            new Notification('Error', {
+                body: e.toString()
+            })})
+        if (someWrong > 0) return;
+
+        footer.innerHTML = "info:" + thisDevice + "-" + thisFilename + "-filesize:" + filesize + "|rendering";
+
+        let filecontent = await fsp.readFile(`${cacheFolder}/${tmp_file_1}`,'utf8')
+
+        // footer.innerHTML =filecontent  // debug only
+        if (someWrong > 0) return;
+        cm = CodeMirror(area, {
+            value: filecontent,
+            mode: "javascript",
+            lineWrapping: true,
+            lineNumbers: true,
+            spellcheck: true,
+            theme: "dracula"
+        });
+        footer.innerHTML = "info:" + thisDevice + "-" + thisFilename + "-filesize:" + filesize + "|ok";
+        isLoad = true;
+    }
+    load()
+
+
+
+</script>
+
+<script>
+    async function writeData(file, txt) {
+        await fsp.writeFileSync(file, txt);
+    }
+
+    async function save2Device() {
+        if (!isLoad) return;
+        let textToWrite = cm.getValue();
+        // fs.writeFileSync('s.txt', textToWrite)
+        await fsp.writeFile(`${cacheFolder}/${tmp_file_2}`, textToWrite, 'utf8')
+        await execPromise(`adb -s ${thisDevice} push ${cacheFolder}/${tmp_file_2} ${thisFilename} `).then(
+            () => console.log("pushed", thisFilename)
+        ).catch((e) => {
+            someWrong += 1
+            new Notification('Error', {
+                body: e.toString()
+            })})
+
+    }
+
+
 
     function save2PC() {
+        if (!isLoad) return;
         let textToWrite = cm.getValue();
         let textFileAsBlob = new Blob([textToWrite], {
             type: "text/plain;charset=utf-8"
@@ -122,12 +207,8 @@
         downloadLink.download = fileNameToSaveAs;
         downloadLink.innerHTML = "Download File";
         if (window.webkitURL != null) {
-            // Chrome allows the link to be clicked
-            // without actually adding it to the DOM.
             downloadLink.href = window.webkitURL.createObjectURL(textFileAsBlob);
         } else {
-            // Firefox requires the link to be added to the DOM
-            // before it can be clicked.
             downloadLink.href = window.URL.createObjectURL(textFileAsBlob);
             downloadLink.onclick = destroyClickedElement;
             downloadLink.style.display = "none";
