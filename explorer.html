@@ -181,7 +181,7 @@
                     if ("Code,Text".includes(getType(getSuffix(file.name))) ) {
                         console.log("this is a text", file.name)
                         let editor = new remote.BrowserWindow({
-                            width: 600,
+                            width: 1000,
                             height: 800,
                             show:true,
                             alwaysOnTop:true,
@@ -195,6 +195,17 @@
                         });
                         editor.setMenu(null)
                         editor.loadFile('./child_editor.html');
+
+                        editor.webContents.on("zoom-changed", (event, zoomDirection) => {
+                            console.log(zoomDirection);
+                            let currentZoom = editor.webContents.getZoomFactor();
+                            if (zoomDirection === "in") {
+                                editor.webContents.zoomFactor = currentZoom + 0.05;
+                            }
+                            if (zoomDirection === "out") {
+                                editor.webContents.zoomFactor = currentZoom - 0.05;
+                            }
+                        });
                     }
                     else {
                         console.log("this is not a text", file.name)

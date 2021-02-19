@@ -2,9 +2,126 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Editor</title>
+    <title>Title</title>
+    <script src="lib/codemirror/lib/codemirror.js"></script>
+    <link rel="stylesheet" href="lib/codemirror/lib/codemirror.css">
+    <script src="lib/codemirror/mode/javascript/javascript.js"></script>
+    <style>
+        body {
+            background: #333;
+            color: white;
+            font-size: 16px;
+        }
+
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 16px;
+            background-color: #0f2803;
+        }
+
+        /*定义滚动条轨道
+         内阴影+圆角*/
+        ::-webkit-scrollbar-track {
+            -webkit-box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.3);
+            border-radius: 10px;
+            background-color: #47a50b;
+        }
+
+        /*定义滑块
+         内阴影+圆角*/
+        ::-webkit-scrollbar-thumb {
+            border-radius: 5px;
+            -webkit-box-shadow: inset 0 0 6px rgba(0, 0, 0, .3);
+            background-color: #05fc40;
+        }
+
+        .CodeMirror {
+            border-top: 1px solid #eee;
+            border-bottom: 1px solid #eee;
+            font-size: 24px;
+            height: auto;
+            resize: vertical;
+            /*overflow: auto !important;*/
+        }
+
+        .cm-invalidchar {
+            color: black;
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+
+        .cm-tab {
+            background: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADAAAAAMCAYAAAAkuj5RAAAAAXNSR0IArs4c6QAAAGFJREFUSMft1LsRQFAQheHPowAKoACx3IgEKtaEHujDjORSgWTH/ZOdnZOcM/sgk/kFFWY0qV8foQwS4MKBCS3qR6ixBJvElOobYAtivseIE120FaowJPN75GMu8j/LfMwNjh4HUpwg4LUAAAAASUVORK5CYII=);
+            background-position: right;
+            background-color: rgba(255, 255, 255, 0.1);
+            background-repeat: no-repeat;
+        }
+
+        .tool {
+            display: inline-block;
+            color: white;
+            border: 1px solid #CCC;
+            background: #0e4978;
+            box-shadow: 0 0 5px -1px rgba(0, 0, 0, 0.2);
+            cursor: pointer;
+            vertical-align: middle;
+            margin-top: 5px;
+            max-width: 200px;
+            padding: 5px;
+            text-align: center;
+        }
+
+        .tool :active {
+            background: rgba(27, 177, 112, 0.1);
+            color: black;
+            box-shadow: 0 0 5px -1px rgba(0, 0, 0, 0.6);
+        }
+    </style>
+    <link rel="stylesheet" href="lib/codemirror/theme/dracula.css">
+
 </head>
 <body>
-hello
+<div onclick="save2PC()" class="tool"> Save -> PC</div>
+<div onclick="save2PC()" class="tool"> Save -> Device</div>
+<hr>
+<div id="draw"></div>
+<script>
+    // var myCodeMirror = CodeMirror();
+    area = document.getElementById("draw")
+
+    var cm = CodeMirror(area, {
+        value: "function myScript(){return 100;}\x01\x02\ngood",
+        mode: "javascript",
+        lineWrapping: true,
+        lineNumbers: true,
+        spellcheck: true,
+        theme: "dracula"
+    });
+
+    function save2PC() {
+        let textToWrite = cm.getValue();
+        let textFileAsBlob = new Blob([textToWrite], {
+            type: "text/plain;charset=utf-8"
+        });
+        let fileNameToSaveAs = "myfile.txt";
+        let downloadLink = document.createElement("a");
+        downloadLink.download = fileNameToSaveAs;
+        downloadLink.innerHTML = "Download File";
+        if (window.webkitURL != null) {
+            // Chrome allows the link to be clicked
+            // without actually adding it to the DOM.
+            downloadLink.href = window.webkitURL.createObjectURL(textFileAsBlob);
+        } else {
+            // Firefox requires the link to be added to the DOM
+            // before it can be clicked.
+            downloadLink.href = window.URL.createObjectURL(textFileAsBlob);
+            downloadLink.onclick = destroyClickedElement;
+            downloadLink.style.display = "none";
+            document.body.appendChild(downloadLink);
+        }
+
+        downloadLink.click();
+    }
+
+</script>
 </body>
 </html>
