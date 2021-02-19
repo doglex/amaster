@@ -180,6 +180,21 @@
                     // todo: editor
                     if ("Code,Text".includes(getType(getSuffix(file.name))) ) {
                         console.log("this is a text", file.name)
+                        let editor = new remote.BrowserWindow({
+                            width: 600,
+                            height: 800,
+                            show:true,
+                            alwaysOnTop:true,
+                            icon:"lib/fav.ico",
+                            frame: true,
+                            toolBarStyle: 'hidden',
+                            visibleOnAllWorkspaces:true ,
+                            webPreferences: {
+                                nodeIntegration: true
+                            }
+                        });
+                        editor.setMenu(null)
+                        editor.loadFile('./child_editor.html');
                     }
                     else {
                         console.log("this is not a text", file.name)
