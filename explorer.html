@@ -177,8 +177,15 @@
                     }
                     this.changePath()
                 } else {
-                    // todo: editor
                     if ("Code,Text".includes(getType(getSuffix(file.name))) ) {
+                        let filename;
+                        if (this.currentPath.substr(this.currentPath.length - 1) === "/") {
+                            filename = this.currentPath + file.name
+                        } else {
+                            filename = this.currentPath + "/" + file.name
+                        }
+                        localStorage.setItem("editor-filename", filename)
+                        localStorage.setItem("editor-device", thisDevice)
                         console.log("this is a text", file.name)
                         let editor = new remote.BrowserWindow({
                             width: 1000,

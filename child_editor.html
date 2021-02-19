@@ -60,12 +60,13 @@
             display: inline-block;
             color: white;
             border: 1px solid #CCC;
-            background: #0e4978;
+            background: transparent;
             box-shadow: 0 0 5px -1px rgba(0, 0, 0, 0.2);
             cursor: pointer;
             vertical-align: middle;
             margin-top: 5px;
             max-width: 200px;
+            margin-left: 20px;
             padding: 5px;
             text-align: center;
         }
@@ -80,10 +81,24 @@
 
 </head>
 <body>
-<div onclick="save2PC()" class="tool"> Save -> PC</div>
-<div onclick="save2PC()" class="tool"> Save -> Device</div>
+<div onclick="save2PC()" class="tool"> ➡💻 </div>
+<div onclick="save2PC()" class="tool">  📲</div>
 <hr>
 <div id="draw"></div>
+
+<script>
+    const thisDevice = localStorage.getItem("editor-device")
+    const thisFilename = localStorage.getItem("editor-filename")
+    document.title = `Editor$   ${thisFilename.substring(thisFilename.length - 60)} on ${thisDevice.substring(thisDevice.length - 15)}`
+    document.write("：", thisDevice, "-", thisFilename)
+    const fs = require("fs")
+    const path = require('path');
+    const cacheFolder = `tmp/${thisDevice}-explorer`
+    fs.mkdirSync(cacheFolder, {recursive: true})
+    const downloadFolder = `amaster-download/${thisDevice}`
+    fs.mkdirSync(downloadFolder, {recursive: true})
+</script>
+
 <script>
     // var myCodeMirror = CodeMirror();
     area = document.getElementById("draw")
