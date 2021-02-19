@@ -180,6 +180,14 @@
     }
 
     async function save2Device() {
+        let div = document.createElement("div");
+        div.id = `status-download-${moment().valueOf()}`;
+        div.style.height = "20px";
+        div.style.color = "black";
+        div.style.background = "linear-gradient(to top right, pink 5%,purple 100%)";
+        div.style.color = "white";
+        div.innerHTML = `writing ${thisFilename} to ${thisDevice} , by ${cacheFolder}/${tmp_file_2}`;
+        document.getElementById("statusbar").appendChild(div);
         if (!isLoad) return;
         let textToWrite = cm.getValue();
         // fs.writeFileSync('s.txt', textToWrite)
@@ -191,7 +199,10 @@
             new Notification('Error', {
                 body: e.toString()
             })})
-
+        div.innerHTML = ` OK. Overwrite ${thisFilename} to ${thisDevice} , by ${cacheFolder}/${tmp_file_2} .`;
+        setTimeout(
+            () => {div.remove()}, 3000
+        )
     }
 
 
