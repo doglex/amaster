@@ -34,7 +34,9 @@
     // document.write("设备：", thisDevice)
     const fs = require("fs")
     const path = require('path');
-    const cacheFolder = `tmp/${thisDevice}`
+    const homeDir = require('os').homedir();
+    const desktopDir = `${homeDir}/Desktop`;
+    const cacheFolder = `${desktopDir}/amaster-tmp/${thisDevice}`
     fs.mkdirSync(cacheFolder, {recursive: true})
 </script>
 <div style="alignment:left" id="snapshot">

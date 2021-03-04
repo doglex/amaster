@@ -95,9 +95,11 @@
     document.title = `Editor$   ${thisFilename.substring(thisFilename.length - 60)} on ${thisDevice.substring(thisDevice.length - 15)}`
     const fs = require("fs")
     const path = require('path');
-    const cacheFolder = `tmp/${thisDevice}-editor`
+    const homeDir = require('os').homedir();
+    const desktopDir = `${homeDir}/Desktop`;
+    const cacheFolder = `${desktopDir}/amaster-tmp/${thisDevice}-editor`
     fs.mkdirSync(cacheFolder, {recursive: true})
-    const downloadFolder = `amaster-download/${thisDevice}`
+    const downloadFolder = `${desktopDir}/amaster-download/${thisDevice}`
     fs.mkdirSync(downloadFolder, {recursive: true})
 </script>
 
