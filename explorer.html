@@ -291,7 +291,7 @@
 
     function refreshFileList(thisPath) {
         if (thisPath.substr(thisPath.length - 1) !== "/") thisPath += "/";
-        cmd = `adb -s ${thisDevice} shell "ls -l ${thisPath} " `
+        cmd = `adb -s ${thisDevice} shell "ls -la ${thisPath} " `
         exec(cmd, (err, stdout, stderr) => {
             if (err && !err.message.includes("ermission")) {
                 console.log(`[Warn]: ${err}`);
@@ -390,7 +390,6 @@
                     value: '',
                     type: 'input',
                     icon: "lib/fav.ico",
-                    customStylesheet:"lib/prompt.css",
                     alwaysOnTop:true,
                 }).then((r) => {
                     if (r === null) {
@@ -425,7 +424,6 @@
                 value: '',
                 type: 'input',
                 icon: "lib/fav.ico",
-                customStylesheet:"lib/prompt.css",
                 alwaysOnTop:true,
             }).then((r) => {
                 if (r === null) {
@@ -456,7 +454,6 @@
                 value: '',
                 type: 'input',
                 icon: "lib/fav.ico",
-                customStylesheet:"lib/prompt.css",
                 alwaysOnTop:true,
             }).then((r) => {
                 if (r === null) {
@@ -495,7 +492,6 @@
                     value: '',
                     type: 'input',
                     icon: "lib/fav.ico",
-                    customStylesheet:"lib/prompt.css",
                     alwaysOnTop:true,
                 }).then((r) => {
                     if (r === null) {
